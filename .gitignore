@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv
+venv/
+ENV/
+
+# Backend runtime files
+socialsaver.db
+downloads/
+cookies.txt
+backend.log
+export_cookies.py
+
+# Flutter
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+flutter_app/build/
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/pubspec.lock
+
+# Windows
+*.user
+*.suo
+*.ncb
+*.sdf
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp / scripts
+run_flutter.bat
+
+# Claude Code internal files
+.claude/
+.claude-flow/
+CLAUDE.md
+
+# Weird temp files
+Run
+Yonetici
