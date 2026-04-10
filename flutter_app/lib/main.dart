@@ -7,26 +7,26 @@ import 'core/router.dart';
 import 'core/api_client.dart';
 import 'core/constants.dart';
 
-/// Backend sunucusunu arka planda başlatır (sadece Windows masaüstü)
+/// Starts the backend server in the background (Windows desktop only)
 Future<void> _ensureBackendRunning() async {
   if (!Platform.isWindows) return;
 
-  // Önce sunucu zaten çalışıyor mu kontrol et
+  // Check if server is already running
   try {
     final socket = await Socket.connect('localhost', 8000,
         timeout: const Duration(seconds: 2));
     socket.destroy();
-    return; // Zaten çalışıyor
+    return; // Already running
   } catch (_) {
-    // Çalışmıyor, başlat
+    // Not running, start it
   }
 
-  // baslat.py'nin konumunu bul (exe yanında veya proje kökünde)
+  // Find server.py (next to exe or in project root)
   final candidates = [
-    // Geliştirme ortamı: flutter_app/../baslat.py
-    '${Directory.current.path}/../baslat.py',
-    '${File(Platform.resolvedExecutable).parent.path}/baslat.py',
-    r'D:\yazilim\ekipai\sonpreje\baslat.py',
+    // Development: flutter_app/../server.py
+    '${Directory.current.path}/../server.py',
+    '${File(Platform.resolvedExecutable).parent.path}/server.py',
+    r'D:\yazilim\ekipai\sonpreje\server.py',
   ];
 
   String? scriptPath;
@@ -46,7 +46,7 @@ Future<void> _ensureBackendRunning() async {
       workingDirectory: File(scriptPath).parent.path,
       mode: ProcessStartMode.detached,
     );
-    // Sunucunun ayağa kalkması için bekle
+    // Wait for server to start
     for (var i = 0; i < 10; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
       try {
@@ -62,17 +62,17 @@ Future<void> _ensureBackendRunning() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Kaydedilmiş sunucu adresini yükle
+  // Load saved server address
   final prefs = await SharedPreferences.getInstance();
   final savedUrl = prefs.getString('server_url');
   if (savedUrl != null && savedUrl.isNotEmpty) {
     AppConstants.baseUrl = savedUrl;
   }
 
-  // API istemcisini başlat
+  // Initialize API client
   ApiClient.instance.init();
 
-  // Backend'i otomatik başlat (masaüstü)
+  // Auto-start backend (desktop)
   await _ensureBackendRunning();
 
   runApp(
@@ -92,7 +92,7 @@ class SocialSaverApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.dark, // Varsayılan dark mod
+      themeMode: ThemeMode.dark,
       routerConfig: appRouter,
     );
   }

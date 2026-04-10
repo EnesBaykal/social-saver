@@ -3,7 +3,7 @@ import '../core/constants.dart';
 import '../models/video_info.dart';
 import '../models/download_task.dart';
 
-/// Dio HTTP istemcisi — backend ile iletişim
+/// Dio HTTP client — communicates with backend
 class ApiClient {
   ApiClient._();
 
@@ -12,7 +12,7 @@ class ApiClient {
   late final Dio _dio;
   bool _initialized = false;
 
-  /// İstemciyi başlat (sunucu URL'si değiştiğinde yeniden çağrılabilir)
+  /// Initialize client (can be called again when server URL changes)
   void init({String? baseUrl}) {
     _dio = Dio(
       BaseOptions(
@@ -23,7 +23,7 @@ class ApiClient {
       ),
     );
 
-    // Loglama ve hata interceptor'ı
+    // Logging and error interceptor
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (DioException e, ErrorInterceptorHandler handler) {
@@ -55,13 +55,13 @@ class ApiClient {
     return _dio;
   }
 
-  /// Sunucu URL'sini güncelle
+  /// Update server URL
   void updateBaseUrl(String newUrl) {
     init(baseUrl: newUrl);
     AppConstants.baseUrl = newUrl;
   }
 
-  /// Video bilgisini çek
+  /// Fetch video info
   Future<VideoInfo> getVideoInfo(String url) async {
     try {
       final response = await dio.post('/api/info', data: {'url': url});
@@ -72,7 +72,7 @@ class ApiClient {
     }
   }
 
-  /// İndirme görevini başlat — task_id döner
+  /// Start download task — returns task_id
   Future<String> startDownload(String url, String formatId) async {
     try {
       final response = await dio.post(
@@ -86,7 +86,7 @@ class ApiClient {
     }
   }
 
-  /// İndirme ilerlemesini sorgula
+  /// Query download progress
   Future<DownloadTask> getProgress(String taskId) async {
     try {
       final response = await dio.get('/api/progress/$taskId');
@@ -96,7 +96,7 @@ class ApiClient {
     }
   }
 
-  /// İndirme geçmişini getir
+  /// Fetch download history
   Future<List<HistoryItem>> getHistory() async {
     try {
       final response = await dio.get('/api/history');
@@ -109,7 +109,7 @@ class ApiClient {
     }
   }
 
-  /// Geçmiş öğesini sil
+  /// Delete history item
   Future<bool> deleteHistory(String id) async {
     try {
       await dio.delete('/api/history/$id');
@@ -119,7 +119,7 @@ class ApiClient {
     }
   }
 
-  /// Tüm geçmişi temizle
+  /// Clear all history
   Future<void> clearHistory() async {
     try {
       await dio.delete('/api/history');
@@ -128,7 +128,7 @@ class ApiClient {
     }
   }
 
-  /// Bağlantıyı test et
+  /// Test connection
   Future<bool> testConnection() async {
     try {
       final response = await dio.get(
@@ -141,7 +141,7 @@ class ApiClient {
     }
   }
 
-  /// Dosya indirme URL'si oluştur
+  /// Build file download URL
   String fileUrl(String filename) {
     return '${AppConstants.baseUrl}/api/files/$filename';
   }
@@ -152,7 +152,7 @@ class ApiClient {
   }
 }
 
-/// API hata sınıfı
+/// API error class
 class ApiException implements Exception {
   final String message;
   const ApiException(this.message);

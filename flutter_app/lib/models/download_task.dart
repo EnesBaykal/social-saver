@@ -1,4 +1,4 @@
-/// Aktif/tamamlanan indirme görevi
+/// Active/completed download task
 class DownloadTask {
   final String id;
   final String url;
@@ -37,7 +37,7 @@ class DownloadTask {
   bool get isError => status == 'error';
 }
 
-/// Geçmiş listesi öğesi
+/// History list item
 class HistoryItem {
   final String id;
   final String title;
@@ -64,7 +64,7 @@ class HistoryItem {
         thumbnail: json['thumbnail'] as String?,
       );
 
-  /// Tarihi okunabilir formata çevir
+  /// Convert date to human-readable format
   String get formattedDate {
     try {
       final dt = DateTime.parse(downloadedAt);

@@ -1,11 +1,11 @@
-/// Uygulama genelinde kullanılan sabitler
+/// App-wide constants
 class AppConstants {
   AppConstants._();
 
-  /// Backend sunucu adresi — ayarlar ekranından değiştirilebilir
+  /// Backend server address — can be changed from settings
   static String baseUrl = 'http://localhost:8000';
 
-  /// Desteklenen platform domain'leri
+  /// Supported platform domains
   static const List<String> supportedDomains = [
     'youtube.com',
     'youtu.be',
@@ -15,13 +15,13 @@ class AppConstants {
     'x.com',
   ];
 
-  /// URL'nin desteklenen bir platformdan olup olmadığını kontrol et
+  /// Check if URL is from a supported platform
   static bool isValidUrl(String url) {
     final lower = url.toLowerCase();
     return supportedDomains.any((domain) => lower.contains(domain));
   }
 
-  /// URL'den platform adını tespit et
+  /// Detect platform name from URL
   static String detectPlatform(String url) {
     final lower = url.toLowerCase();
     if (lower.contains('youtube.com') || lower.contains('youtu.be')) {
@@ -36,7 +36,7 @@ class AppConstants {
     return 'other';
   }
 
-  /// Platform için Türkçe görüntü adı
+  /// Display name for platform
   static String platformDisplayName(String platform) {
     const names = {
       'youtube': 'YouTube',
@@ -47,14 +47,14 @@ class AppConstants {
     return names[platform] ?? platform;
   }
 
-  /// Süreyi mm:ss formatına çevir
+  /// Format seconds to mm:ss
   static String formatDuration(int seconds) {
     final m = seconds ~/ 60;
     final s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
-  /// Byte boyutunu okunabilir formata çevir
+  /// Format byte size to human-readable string
   static String formatFileSize(int? bytes) {
     if (bytes == null || bytes == 0) return '';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';

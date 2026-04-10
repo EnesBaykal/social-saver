@@ -42,7 +42,7 @@ class VideoFormat {
   }
 }
 
-/// URL'den çekilen video metadata'sı
+/// Video metadata fetched from URL
 class VideoInfo {
   final String title;
   final String thumbnail;
@@ -71,7 +71,7 @@ class VideoInfo {
         originalUrl: json['original_url'] as String,
       );
 
-  /// Süreyi mm:ss formatında döndür
+  /// Return duration in mm:ss format
   String get formattedDuration {
     final m = duration ~/ 60;
     final s = duration % 60;

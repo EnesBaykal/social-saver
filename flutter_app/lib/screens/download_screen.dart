@@ -12,15 +12,15 @@ import '../core/theme.dart';
 import '../models/video_info.dart';
 import '../providers/download_provider.dart';
 
-/// Dosyayı platforma uygun konuma kaydeder.
-/// Windows: Kullanıcı/Downloads klasörü
-/// Android/iOS: Galeri
+/// Saves file to the platform-appropriate location.
+/// Windows: User/Downloads folder
+/// Android/iOS: Gallery
 Future<Map<String, dynamic>> _saveFile(
     String fileUrl, String filename) async {
   final dio = Dio();
 
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    // Masaüstü: Downloads klasörüne kaydet
+    // Desktop: save to Downloads folder
     final home = Platform.environment['USERPROFILE'] ??
         Platform.environment['HOME'] ??
         (await getTemporaryDirectory()).path;
@@ -62,7 +62,7 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
     super.initState();
     _initNotifications();
 
-    // İlk format varsayılan olarak seç
+    // Select first format as default
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.videoInfo.formats.isNotEmpty) {
         ref.read(selectedFormatProvider.notifier).state =
@@ -84,7 +84,7 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
   Future<void> _showCompletionNotification(String title) async {
     const androidDetails = AndroidNotificationDetails(
       'download_channel',
-      'İndirmeler',
+      'Downloads',
       channelDescription: 'Video indirme bildirimleri',
       importance: Importance.high,
       priority: Priority.high,
@@ -97,7 +97,7 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
     );
   }
 
-  /// İndirilen dosyayı backend'den al ve uygun konuma kaydet
+  /// Fetch downloaded file from backend and save to appropriate location
   Future<void> _saveToGallery(String filename) async {
     final fileUrl = ApiClient.instance.fileUrl(filename);
 
@@ -148,7 +148,7 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
     final selectedFormat = ref.watch(selectedFormatProvider);
     final downloadState = ref.watch(downloadProvider);
 
-    // İndirme tamamlandıysa galeriye kaydet
+    // Save to gallery when download is complete
     ref.listen<DownloadNotifierState>(downloadProvider, (prev, next) {
       if (next.state == DownloadState.done && next.filename != null) {
         _saveToGallery(next.filename!);
@@ -171,12 +171,12 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Video önizleme kartı
+            // Video preview card
             _VideoPreviewCard(videoInfo: widget.videoInfo),
 
             const SizedBox(height: 24),
 
-            // Format seçici
+            // Format selector
             if (downloadState.state == DownloadState.idle) ...[
               Text(
                 'Select Format',
@@ -201,13 +201,13 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
               ),
             ],
 
-            // İndirme ilerlemesi
+            // Download progress
             if (downloadState.state == DownloadState.starting ||
                 downloadState.state == DownloadState.downloading) ...[
               _ProgressWidget(progress: downloadState.progress),
             ],
 
-            // Tamamlandı
+            // Completed
             if (downloadState.state == DownloadState.done) ...[
               _DoneWidget(
                 onDownloadAgain: () =>
@@ -215,10 +215,10 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
               ),
             ],
 
-            // Hata
+            // Error
             if (downloadState.state == DownloadState.error) ...[
               _ErrorWidget(
-                message: downloadState.errorMessage ?? 'Bilinmeyen hata',
+                message: downloadState.errorMessage ?? 'Unknown error',
                 onRetry: () => ref.read(downloadProvider.notifier).reset(),
               ),
             ],
@@ -229,7 +229,7 @@ class _DownloadScreenState extends ConsumerState<DownloadScreen> {
   }
 }
 
-/// Video thumbnail ve bilgi kartı
+/// Video thumbnail and info card
 class _VideoPreviewCard extends StatelessWidget {
   final VideoInfo videoInfo;
 
@@ -316,7 +316,7 @@ class _VideoPreviewCard extends StatelessWidget {
               ),
             ],
           ),
-          // Başlık ve süre
+          // Title and duration
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -351,7 +351,7 @@ class _VideoPreviewCard extends StatelessWidget {
   }
 }
 
-/// Format seçici listesi
+/// Format selector list
 class _FormatSelector extends StatelessWidget {
   final List<VideoFormat> formats;
   final VideoFormat? selected;
@@ -419,7 +419,7 @@ class _FormatSelector extends StatelessWidget {
   }
 }
 
-/// İndirme ilerleme widget'ı
+/// Download progress widget
 class _ProgressWidget extends StatelessWidget {
   final double progress;
 
@@ -472,7 +472,7 @@ class _ProgressWidget extends StatelessWidget {
   }
 }
 
-/// Tamamlandı widget'ı
+/// Download complete widget
 class _DoneWidget extends StatelessWidget {
   final VoidCallback onDownloadAgain;
 
@@ -520,7 +520,7 @@ class _DoneWidget extends StatelessWidget {
   }
 }
 
-/// Hata widget'ı
+/// Error widget
 class _ErrorWidget extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;

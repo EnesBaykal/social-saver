@@ -30,7 +30,7 @@ class AppColors {
   static const twitter = Color(0xFF1DA1F2);
 }
 
-/// Uygulama tema ayarları
+/// App theme configuration
 class AppTheme {
   AppTheme._();
 

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'constants.dart';
 
-/// Diğer uygulamalardan URL paylaşımını dinler (ör: TikTok'tan "Paylaş" butonu)
+/// Listens for URL sharing from other apps (e.g. TikTok share button)
 class ShareHandler {
   StreamSubscription? _streamSub;
   final void Function(String url) _onUrlReceived;
@@ -10,9 +10,9 @@ class ShareHandler {
   ShareHandler({required void Function(String url) onUrlReceived})
       : _onUrlReceived = onUrlReceived;
 
-  /// Dinleyiciyi başlat
+  /// Start the sharing listener
   void initSharingListener() {
-    // Uygulama açıkken gelen paylaşımlar
+    // Shares received while app is open
     _streamSub = ReceiveSharingIntent.instance
         .getMediaStream()
         .listen((List<SharedMediaFile> files) {
@@ -24,7 +24,7 @@ class ShareHandler {
       }
     });
 
-    // Uygulama kapalıyken gelen paylaşımlar (initial)
+    // Shares received while app was closed (initial)
     ReceiveSharingIntent.instance
         .getInitialMedia()
         .then((List<SharedMediaFile> files) {

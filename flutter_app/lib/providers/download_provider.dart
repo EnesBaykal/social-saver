@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../models/video_info.dart';
 
-/// İndirme ekranının durumu
+/// Download screen state
 enum DownloadState { idle, starting, downloading, saving, done, error }
 
 class DownloadNotifierState {
@@ -37,21 +37,21 @@ class DownloadNotifierState {
       );
 }
 
-/// Seçilen format yönetimi
+/// Selected format state management
 final selectedFormatProvider = StateProvider.autoDispose<VideoFormat?>((ref) => null);
 
-/// İndirme durumu yönetimi
+/// Download state management
 class DownloadNotifier extends StateNotifier<DownloadNotifierState> {
   DownloadNotifier() : super(const DownloadNotifierState());
 
   Timer? _pollTimer;
 
-  /// İndirme işlemini başlat
+  /// Start download
   Future<void> startDownload(VideoInfo videoInfo, VideoFormat format) async {
     state = state.copyWith(state: DownloadState.starting, progress: 0);
 
     try {
-      // Backend'e indirme isteği gönder
+      // Send download request to backend
       final taskId = await ApiClient.instance.startDownload(
         videoInfo.originalUrl,
         format.formatId,
@@ -63,7 +63,7 @@ class DownloadNotifier extends StateNotifier<DownloadNotifierState> {
         progress: 0,
       );
 
-      // Her 500ms'de bir ilerlemeyi sorgula
+      // Poll progress every 500ms
       _pollTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
         _checkProgress(taskId);
       });
@@ -104,11 +104,11 @@ class DownloadNotifier extends StateNotifier<DownloadNotifierState> {
         );
       }
     } catch (_) {
-      // Polling hatalarını sessizce görmezden gel
+      // Silently ignore polling errors
     }
   }
 
-  /// Durumu sıfırla (yeni indirme için)
+  /// Reset state (for new download)
   void reset() {
     _pollTimer?.cancel();
     state = const DownloadNotifierState();

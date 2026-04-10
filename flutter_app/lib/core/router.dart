@@ -6,7 +6,7 @@ import '../screens/download_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/settings_screen.dart';
 
-/// Uygulama navigasyon yapılandırması
+/// App navigation configuration
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
@@ -36,7 +36,7 @@ final appRouter = GoRouter(
   ],
   errorBuilder: (context, state) => Scaffold(
     body: Center(
-      child: Text('Sayfa bulunamadı: ${state.error}'),
+      child: Text('Page not found: ${state.error}'),
     ),
   ),
 );

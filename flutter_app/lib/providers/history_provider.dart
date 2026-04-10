@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../models/download_task.dart';
 
-/// Geçmiş listesi provider'ı
+/// Download history provider
 final historyProvider = FutureProvider.autoDispose<List<HistoryItem>>((ref) async {
   return ApiClient.instance.getHistory();
 });
 
-/// Ana ekran URL yükleme durumu
+/// Home screen URL loading state
 class HomeNotifierState {
   final bool isLoading;
   final String? errorMessage;

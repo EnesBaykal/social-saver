@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['txt'],
-      dialogTitle: 'cookies.txt dosyasını seçin',
+      dialogTitle: 'Select cookies.txt file',
       withData: true,
     );
     if (result == null || result.files.isEmpty) return;
@@ -148,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Sunucu Ayarları ──────────────────────────────────────────
+            // ── Server Settings ──────────────────────────────────────────
             const _SectionTitle('Server Settings'),
             const SizedBox(height: 12),
             Row(
@@ -300,7 +300,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // ── İndirme Ayarları ─────────────────────────────────────────
+            // ── Download Settings ─────────────────────────────────────────
             const _SectionTitle('Download Settings'),
             const SizedBox(height: 12),
             Card(
@@ -358,7 +358,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 32),
 
-            // ── Hakkında ─────────────────────────────────────────────────
+            // ── About ─────────────────────────────────────────────────
             const _SectionTitle('About'),
             const SizedBox(height: 12),
             const Card(

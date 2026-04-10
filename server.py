@@ -1,12 +1,12 @@
 """
-SocialSaver — Tek Dosya Backend + Kurulum
-==========================================
-Kullanım:
-    python baslat.py           → kurulum yapar ve sunucuyu başlatır
-    python baslat.py --kur     → sadece bağımlılıkları kurar
-    python baslat.py --ip      → PC'nin yerel IP adresini gösterir
+SocialSaver — Single-file Backend + Auto Setup
+===============================================
+Usage:
+    python server.py            → installs dependencies and starts server
+    python server.py --install  → install dependencies only
+    python server.py --ip       → show local network IP
 
-Desteklenen platformlar: YouTube, TikTok, Instagram, Facebook, Twitter/X
+Supported platforms: YouTube, TikTok, Instagram, Twitter/X
 """
 
 import sys
@@ -14,51 +14,51 @@ import os
 import subprocess
 import io
 
-# Windows konsolunda Türkçe/Unicode karakterlerin bozulmaması için UTF-8 zorla
+# Force UTF-8 on Windows console to avoid encoding errors
 if sys.stdout and hasattr(sys.stdout, 'buffer'):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 if sys.stderr and hasattr(sys.stderr, 'buffer'):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # --------------------------------------------------------------------------- #
-#  ADIM 1: Bağımlılıkları kur (yoksa)
+#  STEP 1: Install missing dependencies
 # --------------------------------------------------------------------------- #
 REQUIRED = ["fastapi", "uvicorn", "yt_dlp", "aiosqlite", "aiofiles", "httpx"]
 
 
-def _kur_bagimliliklar():
-    eksik = []
+def _install_dependencies():
+    missing = []
     for pkg in REQUIRED:
         try:
             __import__(pkg)
         except ImportError:
-            eksik.append(pkg)
+            missing.append(pkg)
 
-    if eksik:
-        print(f"[KURULUM] Eksik paketler kuruluyor: {', '.join(eksik)}")
+    if missing:
+        print(f"[SETUP] Installing missing packages: {', '.join(missing)}")
         subprocess.check_call([
             sys.executable, "-m", "pip", "install",
             "fastapi==0.115.0",
             "uvicorn[standard]==0.30.0",
-            "yt-dlp",          # her zaman son sürüm
+            "yt-dlp",          # always latest version
             "aiosqlite==0.20.0",
             "aiofiles==24.1.0",
             "python-dotenv==1.0.0",
             "httpx",
             "-q",
         ])
-        print("[OK] Paketler kuruldu.\n")
+        print("[OK] Packages installed.\n")
 
 
-if "--kur" in sys.argv:
-    _kur_bagimliliklar()
+if "--install" in sys.argv:
+    _install_dependencies()
     sys.exit(0)
 
-# Bağımlılıkları kontrol et
-_kur_bagimliliklar()
+# Check and install dependencies
+_install_dependencies()
 
 # --------------------------------------------------------------------------- #
-#  ADIM 2: Import'lar (paketler kurulduktan sonra)
+#  STEP 2: Imports (after packages are installed)
 # --------------------------------------------------------------------------- #
 import asyncio
 import uuid
@@ -77,19 +77,19 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # --------------------------------------------------------------------------- #
-#  AYARLAR
+#  SETTINGS
 # --------------------------------------------------------------------------- #
 DOWNLOAD_DIR = Path(os.getenv("DOWNLOAD_DIR", "./downloads"))
 DB_PATH      = "socialsaver.db"
 HOST         = os.getenv("HOST", "0.0.0.0")
 PORT         = int(os.getenv("PORT", "8000"))
 
-# Aktif görev deposu (bellekte tutulur)
+# Active task store (in-memory)
 tasks: dict[str, dict] = {}
 
 
 # --------------------------------------------------------------------------- #
-#  PYDANTIC MODELLERİ
+#  PYDANTIC MODELS
 # --------------------------------------------------------------------------- #
 class VideoFormat(BaseModel):
     format_id: str
@@ -105,7 +105,7 @@ class VideoFormat(BaseModel):
             size = f" • ~{mb:.1f} MB"
         if self.resolution == "audio":
             return f"Audio Only • MP3{size}"
-        if self.resolution == "En İyi Kalite":
+        if self.resolution == "Best Quality":
             return "Best Quality • MP4"
         return f"{self.resolution} • {self.ext.upper()}{size}"
 
@@ -145,7 +145,7 @@ class HistoryItem(BaseModel):
 
 
 # --------------------------------------------------------------------------- #
-#  VERİTABANI
+#  DATABASE
 # --------------------------------------------------------------------------- #
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
@@ -204,7 +204,7 @@ async def db_clear():
 
 
 # --------------------------------------------------------------------------- #
-#  PLATFORM TESPİTİ
+#  PLATFORM DETECTION
 # --------------------------------------------------------------------------- #
 def detect_platform(url: str) -> str:
     u = url.lower()
@@ -224,13 +224,12 @@ def is_supported(url: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
-#  URL ÖN İŞLEME
+#  URL PRE-PROCESSING
 # --------------------------------------------------------------------------- #
 def _resolve_url(url: str) -> str:
     """
-    Kısaltılmış / share URL'lerini gerçek URL'ye çevirir.
-    Örn: fb.com/share/r/ID → fb.com/reel/123456
-         vt.tiktok.com/XXX → tiktok.com/...
+    Resolve shortened/share URLs to their actual destination.
+    e.g. vt.tiktok.com/XXX → tiktok.com/...
     """
     import urllib.request
     needs_resolve = any(p in url.lower() for p in [
@@ -243,18 +242,17 @@ def _resolve_url(url: str) -> str:
         req = urllib.request.Request(url, headers={"User-Agent": _BROWSER_HEADERS["User-Agent"]})
         with urllib.request.urlopen(req, timeout=10) as resp:
             resolved = resp.url
-            # Gereksiz query parametrelerini temizle
+            # Strip unnecessary query parameters
             if "?" in resolved:
                 base = resolved.split("?")[0]
-                # Sadece temiz URL'yi döndür
                 return base
             return resolved
     except Exception:
-        return url  # resolve edilemezse orijinali kullan
+        return url  # return original if resolve fails
 
 
 # --------------------------------------------------------------------------- #
-#  YT-DLP: BİLGİ ÇEKME
+#  YT-DLP: INFO EXTRACTION
 # --------------------------------------------------------------------------- #
 _BROWSER_HEADERS = {
     "User-Agent": (
@@ -267,12 +265,12 @@ _BROWSER_HEADERS = {
 }
 
 
-COOKIES_FILE = Path("cookies.txt")   # Netscape format cookie dosyası (opsiyonel)
+COOKIES_FILE = Path("cookies.txt")   # Netscape format cookie file (optional)
 
 def _export_browser_cookies() -> bool:
     """
-    rookiepy ile Edge/Chrome cookie'lerini Netscape formatında dışa aktarır.
-    Chrome v130+ app-bound encryption nedeniyle admin yetkisi gerekir.
+    Export Edge/Chrome cookies in Netscape format using rookiepy.
+    Chrome v130+ app-bound encryption requires admin rights.
     """
     try:
         import rookiepy
@@ -312,7 +310,7 @@ def _export_browser_cookies() -> bool:
 
 
 def _apply_cookies(opts: dict, url: str = "") -> dict:
-    """Cookie dosyası geçerliyse ve platform gerektiriyorsa opts'a ekler."""
+    """Add cookie file to opts if it exists and the platform requires it."""
     needs_cookie = any(d in url.lower() for d in ["instagram.com", "twitter.com", "x.com"])
     if needs_cookie and COOKIES_FILE.exists() and COOKIES_FILE.stat().st_size > 100:
         opts["cookiefile"] = str(COOKIES_FILE)
@@ -320,7 +318,7 @@ def _apply_cookies(opts: dict, url: str = "") -> dict:
 
 
 def _yt_opts_base(url: str = "") -> dict:
-    """Tüm platformlar için ortak yt-dlp seçenekleri"""
+    """Base yt-dlp options shared across all platforms"""
     opts: dict = {
         "quiet": True,
         "no_warnings": True,
@@ -333,7 +331,7 @@ def _yt_opts_base(url: str = "") -> dict:
 async def get_video_info(url: str) -> VideoInfo:
     url = _resolve_url(url)
 
-    # Instagram/Facebook için cookie yoksa otomatik dışa aktar
+    # Auto-export browser cookies for Instagram/Twitter if missing
     platform = detect_platform(url)
     if platform in ("instagram", "twitter") and not COOKIES_FILE.exists():
         loop0 = asyncio.get_event_loop()
@@ -359,7 +357,7 @@ async def get_video_info(url: str) -> VideoInfo:
         ext    = fmt.get("ext", "")
         height = fmt.get("height")
 
-        # Kombine stream (hem video hem ses aynı dosyada)
+        # Combined stream (video + audio in same file)
         has_video = vcodec not in (None, "none")
         has_audio = acodec not in (None, "none")
 
@@ -374,7 +372,7 @@ async def get_video_info(url: str) -> VideoInfo:
 
     filtered.sort(key=lambda f: int(f.resolution.replace("p", "")), reverse=True)
 
-    # "En İyi Kalite" — yt-dlp kendi en iyi formatı seçsin
+    # "Best Quality" — let yt-dlp choose the best format
     filtered.insert(0, VideoFormat(
         format_id="bv*+ba/best", ext="mp4", resolution="Best Quality"))
     # Audio only
@@ -392,7 +390,7 @@ async def get_video_info(url: str) -> VideoInfo:
 
 
 # --------------------------------------------------------------------------- #
-#  YT-DLP: İNDİRME
+#  YT-DLP: DOWNLOAD
 # --------------------------------------------------------------------------- #
 async def download_video(task_id: str, req: DownloadRequest,
                          on_progress) -> str:
@@ -418,10 +416,10 @@ async def download_video(task_id: str, req: DownloadRequest,
         pp.append({"key": "FFmpegExtractAudio",
                    "preferredcodec": "mp3", "preferredquality": "192"})
 
-    # Belirtilen format_id mevcut değilse fallback zincirleri
+    # Fallback chain if specified format_id is not available
     fmt = req.format_id
     if not is_audio and fmt not in ("bv*+ba/best", "bestvideo+bestaudio/best"):
-        # Önce seçilen kalite, bulunamazsa bir alt kalite, en son "best"
+        # Try selected quality, then best available, then "best"
         fmt = f"{fmt}/bv*+ba/best/best"
 
     opts = {
@@ -471,13 +469,13 @@ async def download_video(task_id: str, req: DownloadRequest,
 
 
 # --------------------------------------------------------------------------- #
-#  ARKA PLAN GÖREVİ
+#  BACKGROUND TASK
 # --------------------------------------------------------------------------- #
 async def run_download_task(task_id: str, req: DownloadRequest):
     t = tasks[task_id]
     t["status"] = "downloading"
 
-    # Video başlığını al
+    # Fetch video title
     try:
         info = await get_video_info(req.url)
         t["title"]     = info.title
@@ -496,7 +494,7 @@ async def run_download_task(task_id: str, req: DownloadRequest):
         t["progress"] = 100.0
         t["filename"] = fname
 
-        # Veritabanına kaydet
+        # Save to database
         task_obj = DownloadTask(
             id=task_id, url=req.url, title=t["title"],
             status="completed", progress=100.0,
@@ -516,14 +514,14 @@ async def run_download_task(task_id: str, req: DownloadRequest):
 
 
 # --------------------------------------------------------------------------- #
-#  FASTAPI UYGULAMASI
+#  FASTAPI APPLICATION
 # --------------------------------------------------------------------------- #
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     DOWNLOAD_DIR.mkdir(exist_ok=True)
     await init_db()
 
-    # Instagram/Facebook için cookie export dene
+    # Try to auto-export browser cookies for Instagram
     if not (COOKIES_FILE.exists() and COOKIES_FILE.stat().st_size > 100):
         try:
             loop = asyncio.get_event_loop()
@@ -532,7 +530,7 @@ async def lifespan(app: FastAPI):
             ok = False
         if not ok:
             print("[WARN] Instagram cookies could not be exported.")
-            print("  Fix 1: Run baslat.py as Administrator (right-click -> Run as admin).")
+            print("  Fix 1: Run server.py as Administrator (right-click -> Run as admin).")
             print("  Fix 2: Install 'Get cookies.txt LOCALLY' in Edge/Chrome,")
             print("         login to Instagram, export -> cookies.txt")
 
@@ -644,44 +642,43 @@ async def api_clear_history():
 # --- /api/cookies ---
 @app.post("/api/cookies")
 async def api_set_cookies(request: Request):
-    """Cookie dosyası yükle (Netscape format — Facebook/Instagram için)"""
+    """Upload cookie file (Netscape format — for Instagram)"""
     body = await request.body()
     if not body:
-        raise HTTPException(400, "Cookie içeriği boş.")
+        raise HTTPException(400, "Cookie content is empty.")
     COOKIES_FILE.write_bytes(body)
-    return {"success": True, "message": "Cookie dosyası kaydedildi."}
+    return {"success": True, "message": "Cookie file saved."}
 
 
 @app.get("/api/cookies/status")
 async def api_cookie_status():
-    """Cookie dosyası mevcut mu?"""
+    """Check if cookie file exists"""
     return {"exists": COOKIES_FILE.exists(),
             "path": str(COOKIES_FILE) if COOKIES_FILE.exists() else None}
 
 
 @app.post("/api/cookies/export")
 async def api_export_cookies():
-    """Tarayıcı cookie'lerini otomatik dışa aktar (admin yetkisi gerekebilir)."""
+    """Auto-export browser cookies (may require admin rights)."""
     loop = asyncio.get_event_loop()
     ok = await loop.run_in_executor(None, _export_browser_cookies)
     if ok:
-        return {"success": True, "message": "Cookie'ler başarıyla dışa aktarıldı."}
+        return {"success": True, "message": "Cookies exported successfully."}
     raise HTTPException(500,
-        "Cookie dışa aktarılamadı. "
-        "Lütfen baslat.py'yi 'Yönetici olarak çalıştır' ile başlatın veya "
-        "manuel olarak cookies.txt dosyasını ekleyin."
+        "Could not export cookies. "
+        "Please run server.py as Administrator or manually add cookies.txt."
     )
 
 
 # --------------------------------------------------------------------------- #
-#  STATIK DOSYALAR (indirilenler)
+#  STATIC FILES (downloads)
 # --------------------------------------------------------------------------- #
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 app.mount("/api/files", StaticFiles(directory=str(DOWNLOAD_DIR)), name="files")
 
 
 # --------------------------------------------------------------------------- #
-#  YARDIMCI
+#  HELPERS
 # --------------------------------------------------------------------------- #
 def _get_local_ip() -> str:
     try:
@@ -695,12 +692,12 @@ def _get_local_ip() -> str:
 
 
 # --------------------------------------------------------------------------- #
-#  BAŞLAT
+#  ENTRYPOINT
 # --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     if "--ip" in sys.argv:
-        print(f"Telefon icin IP: http://{_get_local_ip()}:{PORT}")
+        print(f"Network IP: http://{_get_local_ip()}:{PORT}")
         sys.exit(0)
 
     import uvicorn
-    uvicorn.run("baslat:app", host=HOST, port=PORT, reload=False)
+    uvicorn.run("server:app", host=HOST, port=PORT, reload=False)

@@ -8,7 +8,7 @@ import 'package:social_downloader/models/download_task.dart';
 
 void main() {
   group('AppConstants', () {
-    test('isValidUrl — desteklenen platformlar kabul edilmeli', () {
+    test('isValidUrl — supported platforms should be accepted', () {
       expect(AppConstants.isValidUrl('https://www.youtube.com/watch?v=abc'), isTrue);
       expect(AppConstants.isValidUrl('https://youtu.be/abc'), isTrue);
       expect(AppConstants.isValidUrl('https://www.tiktok.com/@user/video/123'), isTrue);
@@ -18,13 +18,13 @@ void main() {
       expect(AppConstants.isValidUrl('https://x.com/user/status/123'), isTrue);
     });
 
-    test('isValidUrl — desteklenmeyen URL reddedilmeli', () {
+    test('isValidUrl — unsupported URL should be rejected', () {
       expect(AppConstants.isValidUrl('https://www.google.com'), isFalse);
       expect(AppConstants.isValidUrl('https://www.reddit.com/r/flutter'), isFalse);
       expect(AppConstants.isValidUrl(''), isFalse);
     });
 
-    test('detectPlatform — doğru platform döndürmeli', () {
+    test('detectPlatform — should return correct platform', () {
       expect(AppConstants.detectPlatform('https://www.youtube.com/watch?v=abc'), 'youtube');
       expect(AppConstants.detectPlatform('https://youtu.be/abc'), 'youtube');
       expect(AppConstants.detectPlatform('https://www.tiktok.com/@u/video/1'), 'tiktok');
@@ -34,13 +34,13 @@ void main() {
       expect(AppConstants.detectPlatform('https://x.com/user/status/1'), 'twitter');
     });
 
-    test('formatDuration — süreyi doğru formatlıyor', () {
+    test('formatDuration — should format duration correctly', () {
       expect(AppConstants.formatDuration(0), '00:00');
       expect(AppConstants.formatDuration(65), '01:05');
       expect(AppConstants.formatDuration(3600), '60:00');
     });
 
-    test('formatFileSize — boyutu doğru formatlıyor', () {
+    test('formatFileSize — should format size correctly', () {
       expect(AppConstants.formatFileSize(null), '');
       expect(AppConstants.formatFileSize(0), '');
       expect(AppConstants.formatFileSize(500), '0.5 KB');
@@ -49,7 +49,7 @@ void main() {
   });
 
   group('VideoFormat', () {
-    test('label — video formatı doğru etiketleniyor', () {
+    test('label — video format should be labelled correctly', () {
       const fmt = VideoFormat(
         formatId: 'hd',
         ext: 'mp4',
@@ -61,17 +61,17 @@ void main() {
       expect(fmt.label, contains('50.0 MB'));
     });
 
-    test('label — ses formatı doğru etiketleniyor', () {
+    test('label — audio format should be labelled correctly', () {
       const fmt = VideoFormat(
         formatId: 'audio',
         ext: 'mp3',
         resolution: 'audio',
       );
-      expect(fmt.label, contains('Sadece Ses'));
+      expect(fmt.label, contains('Audio Only'));
       expect(fmt.label, contains('MP3'));
     });
 
-    test('fromJson — JSON\'dan doğru parse ediliyor', () {
+    test('fromJson — should parse correctly from JSON', () {
       final json = {
         'format_id': 'hd',
         'ext': 'mp4',
@@ -87,7 +87,7 @@ void main() {
   });
 
   group('VideoInfo', () {
-    test('formattedDuration — mm:ss formatı doğru', () {
+    test('formattedDuration — mm:ss format should be correct', () {
       const info = VideoInfo(
         title: 'Test',
         thumbnail: '',
@@ -99,7 +99,7 @@ void main() {
       expect(info.formattedDuration, '02:05');
     });
 
-    test('fromJson — JSON\'dan doğru parse ediliyor', () {
+    test('fromJson — should parse correctly from JSON', () {
       final json = {
         'title': 'Test Video',
         'thumbnail': 'https://example.com/thumb.jpg',
@@ -117,7 +117,7 @@ void main() {
   });
 
   group('DownloadTask', () {
-    test('durum getter\'ları doğru çalışıyor', () {
+    test('status getters should work correctly', () {
       const task = DownloadTask(
         id: '1',
         url: 'https://youtube.com/watch?v=abc',
@@ -132,7 +132,7 @@ void main() {
       expect(task.isPending, isFalse);
     });
 
-    test('fromJson — JSON\'dan doğru parse ediliyor', () {
+    test('fromJson — should parse correctly from JSON', () {
       final json = {
         'id': 'task-1',
         'url': 'https://youtube.com/watch?v=abc',
@@ -151,17 +151,17 @@ void main() {
   });
 
   group('HistoryItem', () {
-    test('formattedDate — tarihi Türkçe formatlıyor', () {
+    test('formattedDate — should format date correctly', () {
       const item = HistoryItem(
         id: '1',
         title: 'Test',
         platform: 'youtube',
         downloadedAt: '2026-04-07T12:00:00',
       );
-      expect(item.formattedDate, '7 Nisan 2026');
+      expect(item.formattedDate, 'Apr 7, 2026');
     });
 
-    test('formattedDate — geçersiz tarihte orijinali döndürüyor', () {
+    test('formattedDate — should return original on invalid date', () {
       const item = HistoryItem(
         id: '1',
         title: 'Test',
@@ -172,8 +172,8 @@ void main() {
     });
   });
 
-  group('Widget — Platform İkonları', () {
-    testWidgets('HomeScreen platform ikonları render ediliyor', (tester) async {
+  group('Widget — Platform Icons', () {
+    testWidgets('HomeScreen should render correctly', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
